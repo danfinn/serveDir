@@ -2,17 +2,11 @@ package main
 
 import (
 	"flag"
+	apachelog "github.com/lestrrat-go/apache-logformat"
 	"log"
 	"net/http"
+	"os"
 )
-
-func loggingHandler(h http.Handler) http.Handler {
-	// Basic logging to the console
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.RemoteAddr, r.Method, r.URL.Path)
-		h.ServeHTTP(w, r)
-	})
-}
 
 func main() {
 
@@ -21,5 +15,6 @@ func main() {
 	flag.Parse()
 
 	http.Handle("/", http.FileServer(http.Dir(*dir)))
-	log.Fatal(http.ListenAndServe(":"+*port, loggingHandler(http.FileServer(http.Dir(*dir)))))
+	log.Fatal(http.ListenAndServe(":"+*port, apachelog.CombinedLog.Wrap(http.FileServer(http.Dir(*dir)), os.Stderr)))
+
 }
